@@ -1,0 +1,407 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>LexAssist AI</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            color: #172033;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1200px;
+            margin: 40px auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+            .header h1 {
+                font-size: 38px;
+                margin-bottom: 10px;
+            }
+
+            .header p {
+                color: #667085;
+                font-size: 16px;
+            }
+
+        .case-card {
+            background: white;
+            padding: 28px;
+            margin-bottom: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+        }
+
+        .case-title {
+            font-size: 21px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            word-break: break-word;
+        }
+
+        .case-meta {
+            color: #667085;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .section {
+            margin-top: 20px;
+        }
+
+            .section h2 {
+                font-size: 19px;
+                margin-bottom: 12px;
+            }
+
+        .result {
+            border: 1px solid #eaecf0;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+        }
+
+        .rank {
+            color: #667085;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .result-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .details {
+            color: #667085;
+            font-size: 13px;
+        }
+
+        .similarity {
+            margin-top: 7px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .analysis-button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #172033;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+            .analysis-button:hover {
+                background: #27344d;
+            }
+
+        .full-analysis {
+            display: none;
+            margin-top: 25px;
+            border-top: 1px solid #eaecf0;
+            padding-top: 25px;
+        }
+
+        .chunk {
+            background: #f8f9fc;
+            border: 1px solid #eaecf0;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+        }
+
+        .chunk-title {
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .chunk-pages {
+            color: #667085;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        .chunk-section {
+            margin-top: 15px;
+        }
+
+            .chunk-section h4 {
+                margin-bottom: 8px;
+                font-size: 15px;
+            }
+
+        .small-result {
+            background: white;
+            border: 1px solid #eaecf0;
+            padding: 11px;
+            border-radius: 8px;
+            margin-bottom: 7px;
+        }
+
+        .small-title {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .small-details {
+            color: #667085;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>LexAssist AI</h1>
+            <p>Indian Legal Semantic Retrieval System</p>
+        </div>
+
+
+        {% for case in cases %}
+
+        <div class="case-card">
+
+            <!-- DOCUMENT NAME -->
+
+            <div class="case-title">
+                {{ case.file_name }}
+            </div>
+
+            <div class="case-meta">
+                {{ case.page_count }} pages ·
+                {{ case.chunk_count }} chunks
+            </div>
+
+
+            <!-- TOP 5 STATUTES -->
+
+            <div class="section">
+
+                <h2>📜 Top 5 Statutes</h2>
+
+                {% for result in case.top_statutes %}
+
+                <div class="result">
+
+                    <div class="rank">
+                        Rank {{ loop.index }}
+                    </div>
+
+                    <div class="result-title">
+                        {{ result.provision_name }}
+                    </div>
+
+                    <div class="details">
+                        Statute ID: {{ result.statute_id }}
+                    </div>
+
+                    <div class="similarity">
+                        Similarity: {{ "%.4f"|format(result.similarity) }}
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+
+            <!-- TOP 5 PRECEDENTS -->
+
+            <div class="section">
+
+                <h2>⚖️ Top 5 Precedents</h2>
+
+                {% for result in case.top_precedents %}
+
+                <div class="result">
+
+                    <div class="rank">
+                        Rank {{ loop.index }}
+                    </div>
+
+                    <div class="result-title">
+
+                        {% if result.case_title %}
+                        {{ result.case_title }}
+                        {% else %}
+                        Case title unavailable
+                        {% endif %}
+
+                    </div>
+
+                    <div class="details">
+                        Precedent ID: {{ result.precedent_id }}
+
+                        {% if result.date %}
+                        · Date: {{ result.date }}
+                        {% endif %}
+
+                        · {{ result.jurisdiction }}
+                    </div>
+
+                    <div class="similarity">
+                        Similarity: {{ "%.4f"|format(result.similarity) }}
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+
+            <!-- FULL ANALYSIS BUTTON -->
+
+            <button class="analysis-button"
+                    onclick="toggleAnalysis('analysis-{{ loop.index }}', this)">
+                Full Analysis
+            </button>
+
+
+            <!-- FULL CHUNK ANALYSIS -->
+
+            <div class="full-analysis"
+                 id="analysis-{{ loop.index }}">
+
+                <h2>Full Chunk Analysis</h2>
+
+
+                {% for chunk in case.statutes %}
+
+                <div class="chunk">
+
+                    <div class="chunk-title">
+                        Chunk {{ chunk.chunk_id }}
+                    </div>
+
+                    <div class="chunk-pages">
+                        Pages {{ chunk.page_start }}–{{ chunk.page_end }}
+                    </div>
+
+
+                    <!-- CHUNK STATUTES -->
+
+                    <div class="chunk-section">
+
+                        <h4>📜 Statutes</h4>
+
+                        {% for result in chunk.results %}
+
+                        <div class="small-result">
+
+                            <div class="small-title">
+                                {{ result.provision_name }}
+                            </div>
+
+                            <div class="small-details">
+                                Rank {{ result.rank }}
+                                · Similarity {{ "%.4f"|format(result.similarity) }}
+                            </div>
+
+                        </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <!-- CHUNK PRECEDENTS -->
+                    {% set precedent_chunk = case.precedents[loop.index0] %}
+
+                    <div class="chunk-section">
+
+                        <h4>⚖️ Precedents</h4>
+
+                        {% for result in precedent_chunk.results %}
+
+                        <div class="small-result">
+
+                            <div class="small-title">
+
+                                {% if result.case_title %}
+                                {{ result.case_title }}
+                                {% else %}
+                                Case title unavailable
+                                {% endif %}
+
+                            </div>
+
+                            <div class="small-details">
+                                Rank {{ result.rank }}
+                                · Similarity {{ "%.4f"|format(result.similarity) }}
+                            </div>
+
+                        </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <script>
+
+        function toggleAnalysis(id, button) {
+
+            const section = document.getElementById(id);
+
+            if (section.style.display === "block") {
+
+                section.style.display = "none";
+                button.textContent = "Full Analysis";
+
+            } else {
+
+                section.style.display = "block";
+                button.textContent = "Hide Full Analysis";
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>
